@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Devices {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  ward      String
+  hospital  String
+  sn        String     @unique
+  seq       Int        @unique
+  name      String
+  maxTemp   Float      @default(0)
+  minTemp   Float      @default(0)
+  adjTemp   Float      @default(0)
+  record    Int        @default(0)
+  token     String
+  log       TempLogs[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now()) @updatedAt
+}
+
+model TempLogs {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  mcuId     String
+  internet  Boolean  @default(false)
+  door      Boolean  @default(false)
+  plugin    Boolean  @default(false)
+  tempValue Float    @default(0)
+  realValue Float    @default(0)
+  date      String?
+  time      String?
+  isAlert   Boolean  @default(false)
+  message   String?
+  device    Devices  @relation(fields: [mcuId], references: [sn])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
