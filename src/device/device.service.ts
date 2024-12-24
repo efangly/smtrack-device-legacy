@@ -57,7 +57,7 @@ export class DeviceService {
       }),
       this.prisma.devices.count({ where: wardId ? { ward: wardId ? wardId : undefined } : conditions })
     ]);
-    await this.redis.set(key, JSON.stringify({ total, devices }), 10);
+    await this.redis.set(wardId ? wardId : key, JSON.stringify({ total, devices }), 10);
     return { total, devices };
   }
 
