@@ -34,7 +34,7 @@ export class DeviceService {
 
   async findAll(wardId: string, page: string, perpage: string, user: JwtPayloadDto) {
     const { conditions, key } = this.findCondition(user);
-    const cache = await this.redis.get(key);
+    const cache = await this.redis.get(wardId ? wardId : key);
     if (cache) return JSON.parse(cache);
     const [devices, total] = await this.prisma.$transaction([
       this.prisma.devices.findMany({ 
