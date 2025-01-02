@@ -9,6 +9,7 @@ import { RedisModule } from './redis/redis.module';
 import { InfluxdbModule } from './influxdb/influxdb.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { GraphModule } from './graph/graph.module';
+import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { GraphModule } from './graph/graph.module';
     RedisModule, 
     InfluxdbModule, 
     PrismaModule, 
-    GraphModule
+    GraphModule, 
+    RabbitmqModule
   ],
   providers: [JwtStrategy, DeviceStrategy]
 })

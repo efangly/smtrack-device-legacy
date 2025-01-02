@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { GraphService } from './graph.service';
 import { JwtAuthGuard } from '../common/guards';
 
