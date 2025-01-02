@@ -57,28 +57,23 @@ export class TemplogService {
         plugin = false;
         break;
     }
-    const tempLog = await this.prisma.tempLogs.create({
-      data: {
-        mcuId: templogDto.mcuId,
-        internet: internet,
-        door: door,
-        plugin: plugin,
-        tempValue: templogDto.tempValue,
-        realValue: templogDto.realValue,
-        date: templogDto.date,
-        time: templogDto.time,
-        isAlert: templogDto.isAlert,
-        message: templogDto.message,
-        createdAt: dateFormat(new Date()),
-        updatedAt: dateFormat(new Date())
-      },
-      include: {
-        device: { select: { ward: true, hospital: true } }
-      }
-    });
-    await this.rabbitmq.send(process.env.NODE_ENV === "production" ? 'templog' : 'templog-test', JSON.stringify(templogDto));
+    const data = {
+      mcuId: templogDto.mcuId,
+      internet: internet,
+      door: door,
+      plugin: plugin,
+      tempValue: templogDto.tempValue,
+      realValue: templogDto.realValue,
+      date: templogDto.date,
+      time: templogDto.time,
+      isAlert: templogDto.isAlert,
+      message: templogDto.message,
+      createdAt: dateFormat(new Date()),
+      updatedAt: dateFormat(new Date())
+    }
+    await this.rabbitmq.send(process.env.NODE_ENV === "production" ? 'templog' : 'templog-test', JSON.stringify(data));
     await this.redis.del("templog");
-    return tempLog;
+    return data;
   }
 
   async findAll(user: JwtPayloadDto) {
