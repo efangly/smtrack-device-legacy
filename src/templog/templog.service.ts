@@ -76,11 +76,7 @@ export class TemplogService {
         device: { select: { ward: true, hospital: true } }
       }
     });
-    if (!tempLog.isAlert) {
-      await this.rabbitmq.send(process.env.NODE_ENV === "production" ? 'notification' : 'notification-test', JSON.stringify(templogDto));
-    } else {
-      await this.rabbitmq.send(process.env.NODE_ENV === "production" ? 'logday' : 'logday-test', JSON.stringify(templogDto));
-    }
+    await this.rabbitmq.send(process.env.NODE_ENV === "production" ? 'templog' : 'templog-test', JSON.stringify(templogDto));
     await this.redis.del("templog");
     return tempLog;
   }
