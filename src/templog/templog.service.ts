@@ -3,15 +3,15 @@ import { CreateTemplogDto } from './dto/create-templog.dto';
 import { UpdateTemplogDto } from './dto/update-templog.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { dateFormat } from '../common/utils';
-import { JwtPayloadDto } from '../common/dto';
+import { DevicePayloadDto, JwtPayloadDto } from '../common/dto';
 import { Prisma } from '@prisma/client';
 import { RedisService } from '../redis/redis.service';
 import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class TemplogService {
-  constructor(private readonly prisma: PrismaService, private readonly redis: RedisService, private readonly rabbitmq: RabbitmqService) { }
-  async create(templogDto: CreateTemplogDto) {
+  constructor(private readonly prisma: PrismaService, private readonly redis: RedisService, private readonly rabbitmq: RabbitmqService) {}
+  async create(templogDto: CreateTemplogDto, user: DevicePayloadDto) {
     let internet = false;
     let door = false;
     let plugin = false;
@@ -58,7 +58,7 @@ export class TemplogService {
         break;
     }
     const data = {
-      mcuId: templogDto.mcuId,
+      mcuId: user.id,
       internet: internet,
       door: door,
       plugin: plugin,

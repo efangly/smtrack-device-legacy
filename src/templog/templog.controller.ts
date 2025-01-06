@@ -5,7 +5,7 @@ import { UpdateTemplogDto } from './dto/update-templog.dto';
 import { DeviceJwtAuthGuard, JwtAuthGuard } from '../common/guards';
 import { Roles } from '../common/decorators';
 import { Role } from '../common/enums/role.enum';
-import { JwtPayloadDto } from '../common/dto';
+import { DevicePayloadDto, JwtPayloadDto } from '../common/dto';
 
 @Controller('templog')
 export class TemplogController {
@@ -14,17 +14,17 @@ export class TemplogController {
   @Post()
   @UseGuards(DeviceJwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createTemplogDto: CreateTemplogDto) {
+  async create(@Body() createTemplogDto: CreateTemplogDto, @Request() req: { user: DevicePayloadDto }) {
     createTemplogDto.isAlert = false;
-    return this.templogService.create(createTemplogDto);
+    return this.templogService.create(createTemplogDto, req.user);
   }
 
   @Post('alert/notification')
   @UseGuards(DeviceJwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createWithAlert(@Body() createTemplogDto: CreateTemplogDto) {
+  async createWithAlert(@Body() createTemplogDto: CreateTemplogDto, @Request() req: { user: DevicePayloadDto }) {
     createTemplogDto.isAlert = true;
-    return this.templogService.create(createTemplogDto);
+    return this.templogService.create(createTemplogDto, req.user);
   }
 
   @Get('alert/notification')
