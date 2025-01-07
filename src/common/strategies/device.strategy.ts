@@ -14,6 +14,6 @@ export class DeviceStrategy extends PassportStrategy(Strategy, 'device-jwt') {
   }
 
   async validate(payload: any): Promise<DevicePayloadDto> {
-    return { id: payload.id, hosId: payload.hosId, wardId: payload.wardId };
+    return { id: payload.sn, hosId: payload.hosId, wardId: payload.wardId };
   }
 }
