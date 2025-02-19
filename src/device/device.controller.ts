@@ -29,6 +29,11 @@ export class DeviceController {
     return this.deviceService.findOne(id);
   }
 
+  @Get('/devices/list')
+  async findDeviceList(@Request() req: { user: JwtPayloadDto }) {
+    return this.deviceService.getDeviceList(req.user);
+  }
+
   @Put(':id')
   @Roles(Role.SUPER, Role.SERVICE)
   async update(@Param('id') id: string, @Body() updateDeviceDto: UpdateDeviceDto) {

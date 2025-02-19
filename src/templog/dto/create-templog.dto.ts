@@ -43,6 +43,11 @@ export class CreateTemplogDto {
   @MaxLength(255)
   message: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  probe: string;
+
   @IsDate()
   @IsOptional()
   createdAt: Date;

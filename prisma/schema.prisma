@@ -10,12 +10,12 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Devices {
-  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  id        String     @id @default(uuid())
   ward      String
   hospital  String
   sn        String     @unique
@@ -32,7 +32,7 @@ model Devices {
 }
 
 model TempLogs {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   mcuId     String
   internet  Boolean  @default(false)
   door      Boolean  @default(false)
@@ -43,6 +43,7 @@ model TempLogs {
   time      String?
   isAlert   Boolean  @default(false)
   message   String?
+  probe     String?
   device    Devices  @relation(fields: [mcuId], references: [sn])
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

@@ -10,6 +10,7 @@ import { InfluxdbModule } from './influxdb/influxdb.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { GraphModule } from './graph/graph.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
+import { BackupModule } from './backup/backup.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
     InfluxdbModule, 
     PrismaModule, 
     GraphModule, 
-    RabbitmqModule
+    RabbitmqModule, 
+    BackupModule
   ],
   providers: [JwtStrategy, DeviceStrategy]
 })

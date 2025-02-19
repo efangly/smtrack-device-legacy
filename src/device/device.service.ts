@@ -29,18 +29,37 @@ export class DeviceService {
     });
     deviceDto.createdAt = dateFormat(new Date());
     deviceDto.updatedAt = dateFormat(new Date());
+    await this.redis.del('device_legacy');
     return this.prisma.devices.create({ data: deviceDto });
   }
 
   async findAll(wardId: string, page: string, perpage: string, user: JwtPayloadDto) {
+    const pageInt = page ? (parseInt(page) - 1) * parseInt(perpage) : 0;
+    const perpageInt = perpage ? parseInt(perpage) : 10;
     const { conditions, key } = this.findCondition(user);
-    const cache = await this.redis.get(wardId ? wardId : key);
+    const cache = await this.redis.get(`${key}-${wardId ? wardId : ''}${pageInt.toString()}${perpageInt.toString()}`);
     if (cache) return JSON.parse(cache);
     const [devices, total] = await this.prisma.$transaction([
-      this.prisma.devices.findMany({ 
-        skip: page ? (parseInt(page) - 1) * parseInt(perpage) : 0,
-        take: perpage ? parseInt(perpage) : 10,
-        where: wardId ? { ward: wardId ? wardId : undefined } : conditions, 
+      page && perpage ? this.prisma.devices.findMany({ 
+        skip: pageInt, 
+        take: perpageInt,
+        where: wardId ? { ward: wardId } : conditions, 
+        select: { 
+          id: true,
+          sn: true, 
+          name: true, 
+          ward: true,
+          hospital: true,
+          maxTemp: true,
+          minTemp: true,
+          adjTemp: true,
+          record: true,
+          token: true,
+          log: { where: { isAlert: false }, take: 1, orderBy: { createdAt: 'desc' } }
+        },
+        orderBy: { seq: 'asc' } 
+      }) : this.prisma.devices.findMany({ 
+        where: wardId ? { ward: wardId } : conditions, 
         select: { 
           id: true,
           sn: true, 
@@ -55,14 +74,16 @@ export class DeviceService {
         },
         orderBy: { seq: 'asc' } 
       }),
-      this.prisma.devices.count({ where: wardId ? { ward: wardId ? wardId : undefined } : conditions })
+      this.prisma.devices.count({ where: wardId ? { ward: wardId } : conditions })
     ]);
-    await this.redis.set(wardId ? wardId : key, JSON.stringify({ total, devices }), 10);
+    await this.redis.set(`${key}-${wardId ? wardId : ''}${pageInt.toString()}${perpageInt.toString()}`, JSON.stringify({ total, devices }), 10);
     return { total, devices };
   }
 
   async findOne(id: string) {
-    return this.prisma.devices.findUnique({ 
+    const cache = await this.redis.get(`device_legacy:${id}`);
+    if (cache) return JSON.parse(cache);
+    const result = await this.prisma.devices.findUnique({ 
       where: { sn: id },
       select: { 
         id: true,
@@ -77,14 +98,36 @@ export class DeviceService {
         log: { where: { isAlert: false }, orderBy: { createdAt: 'asc' } }
       } 
     });
+    if (result) await this.redis.set(`device_legacy:${id}`, JSON.stringify(result), 15);
+    return result;
+  }
+
+  async getDeviceList(user: JwtPayloadDto) {
+    const { conditions, key } = this.findCondition(user);
+    const cache = await this.redis.get(key);
+    if (cache) return JSON.parse(cache);
+    const result = await this.prisma.devices.findMany({ 
+      where: conditions,
+      select: { 
+        id: true,
+        sn: true, 
+        name: true, 
+        ward: true,
+        hospital: true
+      } 
+    });
+    if (result) await this.redis.set(key, JSON.stringify(result), 10);
+    return result;
   }
 
   async update(id: string, deviceDto: UpdateDeviceDto) {
     deviceDto.updatedAt = dateFormat(new Date());
+    await this.redis.del('device_legacy');
     return this.prisma.devices.update({ where: { id }, data: deviceDto });
   }
 
   async remove(id: string) {
+    await this.redis.del('device_legacy');
     return this.prisma.devices.delete({ where: { sn: id } });
   }
 

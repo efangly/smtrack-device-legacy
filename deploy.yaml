@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: legacy
+  namespace: smtrack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: legacy
+  template:
+    metadata:
+      labels:
+        app: legacy
+    spec:
+      containers:
+      - name: legacy
+        image: siamatic/tms-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /legacy/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        livenessProbe:
+          httpGet:
+            path: /legacy/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 5
+        resources:
+          requests:
+            memory: 512Mi
+            cpu: 100m
+          limits:
+            memory: 512Mi
+            cpu: 100m
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: tms-config
+              key: DATABASE_URL
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: tms-config
+              key: PORT
+        - name: JWT_SECRET
+          valueFrom:
+            configMapKeyRef:
+              name: jwt-secret
+              key: JWT_SECRET
+        - name: DEVICE_SECRET
+          valueFrom:
+            configMapKeyRef:
+              name: jwt-secret
+              key: DEVICE_SECRET
+        - name: RADIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: RADIS_HOST
+        - name: RADIS_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: RADIS_PASSWORD
+        - name: RABBITMQ
+          valueFrom:
+            configMapKeyRef:
+              name: rabbitmq-config
+              key: RABBITMQ
+        - name: INFLUXDB_URI
+          valueFrom:
+            configMapKeyRef:
+              name: influxdb-config
+              key: INFLUXDB_URI
+        - name: INFLUXDB_ORG
+          valueFrom:
+            configMapKeyRef:
+              name: influxdb-config
+              key: INFLUXDB_ORG
+        - name: INFLUXDB_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: tms-config
+              key: INFLUXDB_BUCKET
+        - name: INFLUXDB_TOKEN
+          valueFrom:
+            configMapKeyRef:
+              name: influxdb-config
+              key: INFLUXDB_TOKEN
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: tms-config
+              key: NODE_ENV
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: legacy
+  namespace: smtrack
+spec:
+  selector:
+    app: legacy
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP

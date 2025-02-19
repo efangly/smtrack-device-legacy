@@ -8,7 +8,7 @@ export class GraphController {
   constructor(private readonly graphService: GraphService) {}
 
   @Get()
-  findAll(@Query('sn') sn: string, @Query('filter') filter: string) {
+  async findAll(@Query('sn') sn: string, @Query('filter') filter: string) {
     return this.graphService.findAll(sn, filter);
   }
 }

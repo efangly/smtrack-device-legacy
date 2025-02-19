@@ -68,6 +68,7 @@ export class TemplogService {
       time: templogDto.time,
       isAlert: templogDto.isAlert,
       message: templogDto.message,
+      probe: templogDto.mcuId,
       createdAt: dateFormat(new Date()),
       updatedAt: dateFormat(new Date())
     }
@@ -111,10 +112,12 @@ export class TemplogService {
 
   async update(id: string, templogDto: UpdateTemplogDto) {
     templogDto.updatedAt = dateFormat(new Date());
+    await this.redis.del("templog");
     return this.prisma.tempLogs.update({ where: { id }, data: templogDto });
   }
 
   async remove(id: string) {
+    await this.redis.del("templog");
     return this.prisma.tempLogs.delete({ where: { id } });
   }
 
