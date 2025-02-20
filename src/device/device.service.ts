@@ -114,7 +114,8 @@ export class DeviceService {
         name: true, 
         ward: true,
         hospital: true
-      } 
+      },
+      orderBy: { seq: 'asc' } 
     });
     if (result) await this.redis.set(key, JSON.stringify(result), 10);
     return result;
