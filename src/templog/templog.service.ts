@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { CreateTemplogDto } from './dto/create-templog.dto';
 import { UpdateTemplogDto } from './dto/update-templog.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -6,11 +6,15 @@ import { dateFormat } from '../common/utils';
 import { DevicePayloadDto, JwtPayloadDto } from '../common/dto';
 import { Prisma } from '@prisma/client';
 import { RedisService } from '../redis/redis.service';
-import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class TemplogService {
-  constructor(private readonly prisma: PrismaService, private readonly redis: RedisService, private readonly rabbitmq: RabbitmqService) {}
+  constructor(
+    @Inject('RABBITMQ_SERVICE') private readonly client: ClientProxy,
+    private readonly prisma: PrismaService, 
+    private readonly redis: RedisService
+  ) {}
   async create(templogDto: CreateTemplogDto, user: DevicePayloadDto) {
     let internet = false;
     let door = false;
@@ -72,7 +76,7 @@ export class TemplogService {
       createdAt: dateFormat(new Date()),
       updatedAt: dateFormat(new Date())
     }
-    await this.rabbitmq.send(process.env.NODE_ENV === "production" ? 'templog' : 'templog-test', JSON.stringify(data));
+    this.client.emit('templog', data);
     await this.redis.del("templog");
     return data;
   }
