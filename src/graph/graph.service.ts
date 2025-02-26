@@ -10,7 +10,7 @@ export class GraphService {
     if (!filter) throw new BadRequestException('Invalid filter');
     const cache = await this.redis.get(`device_legacy_graph:${sn}${filter.split(',').join("")}`);
     if (cache) return JSON.parse(cache);
-    let query = 'from(bucket: "smtrack-templog") ';
+    let query = `from(bucket: "${process.env.INFLUXDB_BUCKET}") `;
     switch (filter) {
       case 'day':
         query += '|> range(start: -1d) ';
@@ -26,7 +26,7 @@ export class GraphService {
         const date = filter.split(',');
         query += `|> range(start: ${date[0]}, stop: ${date[1]}) `;
     };
-    query += ' |> filter(fn: (r) => r._measurement == "templog") |> timeShift(duration: 7h, columns: ["_time"]) ';
+    query += '|> filter(fn: (r) => r._measurement == "templog") |> timeShift(duration: 7h, columns: ["_time"]) ';
     query += `|> filter(fn: (r) => r._field == "temp" and r.sn == "${sn}") |> yield(name: "temp")`;
     const result = await this.influxdb.queryData(query);
     await this.redis.set(`device_legacy_graph:${sn}${filter.split(',').join("")}`, JSON.stringify(result), 10);
