@@ -24,7 +24,7 @@ spec:
             path: /legacy/health
             port: 8080
           initialDelaySeconds: 10
-          periodSeconds: 30
+          periodSeconds: 10
           timeoutSeconds: 5
           successThreshold: 1
           failureThreshold: 5
@@ -33,7 +33,7 @@ spec:
             path: /legacy/health
             port: 8080
           initialDelaySeconds: 10
-          periodSeconds: 30
+          periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 5
         resources:

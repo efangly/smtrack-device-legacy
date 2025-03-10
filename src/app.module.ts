@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { DeviceModule } from './device/device.module';
 import { TemplogModule } from './templog/templog.module';
@@ -14,6 +15,7 @@ import { BackupModule } from './backup/backup.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ScheduleModule.forRoot(),
     PassportModule,
     DeviceModule,
     TemplogModule,
