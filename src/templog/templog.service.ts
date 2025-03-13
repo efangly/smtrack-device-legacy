@@ -94,7 +94,7 @@ export class TemplogService {
       where: conditions,
       orderBy: { createdAt: 'desc' }
     });
-    await this.redis.set(key, JSON.stringify(templogs), 30);
+    if (templogs.length > 0) await this.redis.set(key, JSON.stringify(templogs), 30);
     return templogs;
   }
 
@@ -108,10 +108,14 @@ export class TemplogService {
   }
 
   async findOne(sn: string) {
-    return this.prisma.tempLogs.findMany({
+    const cache = await this.redis.get(`templog:${sn}`);
+    if (cache) return JSON.parse(cache);
+    const templog = await this.prisma.tempLogs.findMany({
       where: { mcuId: sn },
       orderBy: { createdAt: 'desc' }
     });
+    if (templog.length > 0) await this.redis.set(`templog:${sn}`, JSON.stringify(templog), 30);
+    return templog;
   }
 
   async update(id: string, templogDto: UpdateTemplogDto) {

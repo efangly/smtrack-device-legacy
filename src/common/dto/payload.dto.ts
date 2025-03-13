@@ -7,6 +7,10 @@ export class JwtPayloadDto {
 
   @IsString()
   @MaxLength(150)
+  name: string;
+
+  @IsString()
+  @MaxLength(150)
   role: string;
 
   @IsString()
