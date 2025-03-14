@@ -41,6 +41,12 @@ export class TemplogController {
     return this.templogService.findDashboard(ward);
   }
 
+  @Get('history/notification')
+  @UseGuards(JwtAuthGuard)
+  async findNotification(@Request() req: { user: JwtPayloadDto }, @Query('filter') filter: string) {
+    return this.templogService.findHistory(req.user, filter);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string) {
