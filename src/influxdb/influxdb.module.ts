@@ -10,7 +10,7 @@ import { InfluxdbService } from './influxdb.service';
       useFactory: () => {
         const url = process.env.INFLUXDB_URI;
         const token = process.env.INFLUXDB_TOKEN;
-        return new InfluxDB({ url, token });
+        return new InfluxDB({ url, token, transportOptions: { timeout: 30000 } });
       },
     },
     InfluxdbService,
