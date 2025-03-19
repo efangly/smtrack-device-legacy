@@ -33,23 +33,36 @@ export class DeviceService {
     return this.prisma.devices.create({ data: deviceDto });
   }
 
-  async findAll(wardId: string, page: string, perpage: string, user: JwtPayloadDto) {
-    const pageInt = page ? (parseInt(page) - 1) * parseInt(perpage) : 0;
-    const perpageInt = perpage ? parseInt(perpage) : 10;
+  async findAll(filter: string, wardId: string, page: string, perpage: string, user: JwtPayloadDto) {
     const { conditions, key } = this.findCondition(user);
-    const cache = await this.redis.get(`${key}-${wardId ? wardId : ''}${pageInt.toString()}${perpageInt.toString()}`);
-    if (cache) return JSON.parse(cache);
+    if (!filter) {
+      const cache = await this.redis.get(wardId ? `device_legacy:${wardId}${page || 0}${perpage || 10}` : `${key}${page || 0}${perpage || 10}`);
+      if (cache) return JSON.parse(cache);
+    }
+    let search = {} as Prisma.DevicesWhereInput;
+    if (filter) {
+      search = {
+        OR: [
+          { name: { contains: filter } },
+          { sn: { contains: filter } },
+          { wardName: { contains: filter } },
+          { hospitalName: { contains: filter } }
+        ]
+      };
+    }
     const [devices, total] = await this.prisma.$transaction([
-      page && perpage ? this.prisma.devices.findMany({ 
-        skip: pageInt, 
-        take: perpageInt,
-        where: wardId ? { ward: wardId } : conditions, 
+      this.prisma.devices.findMany({ 
+        skip: page ? (parseInt(page) - 1) * parseInt(perpage) : 0,
+        take: perpage ? parseInt(perpage) : 10,
+        where: filter ? { AND: [wardId ? { ward: wardId } : conditions, search] } : wardId ? { ward: wardId } : conditions, 
         select: { 
           id: true,
           sn: true, 
           name: true, 
           ward: true,
+          wardName: true,
           hospital: true,
+          hospitalName: true,
           maxTemp: true,
           minTemp: true,
           adjTemp: true,
@@ -58,25 +71,10 @@ export class DeviceService {
           log: { where: { isAlert: false }, take: 1, orderBy: { createdAt: 'desc' } }
         },
         orderBy: { seq: 'asc' } 
-      }) : this.prisma.devices.findMany({ 
-        where: wardId ? { ward: wardId } : conditions, 
-        select: { 
-          id: true,
-          sn: true, 
-          name: true, 
-          ward: true,
-          hospital: true,
-          maxTemp: true,
-          minTemp: true,
-          adjTemp: true,
-          record: true,
-          log: { where: { isAlert: false }, take: 1, orderBy: { createdAt: 'desc' } }
-        },
-        orderBy: { seq: 'asc' } 
       }),
-      this.prisma.devices.count({ where: wardId ? { ward: wardId } : conditions })
+      this.prisma.devices.count({ where: filter ? { AND: [wardId ? { ward: wardId } : conditions, search] } : wardId ? { ward: wardId } : conditions })
     ]);
-    if (devices.length > 0) await this.redis.set(`${key}-${wardId ? wardId : ''}${pageInt.toString()}${perpageInt.toString()}`, JSON.stringify({ total, devices }), 10);
+    if (devices.length > 0 && !filter) await this.redis.set(wardId ? `device_legacy:${wardId}${page || 0}${perpage || 10}` : `${key}${page || 0}${perpage || 10}`, JSON.stringify({ total, devices }), 10);
     return { total, devices };
   }
 
@@ -90,7 +88,9 @@ export class DeviceService {
         sn: true, 
         name: true, 
         ward: true,
+        wardName: true,
         hospital: true,
+        hospitalName: true,
         maxTemp: true,
         minTemp: true,
         adjTemp: true,
@@ -113,7 +113,9 @@ export class DeviceService {
         sn: true, 
         name: true, 
         ward: true,
-        hospital: true
+        wardName: true,
+        hospital: true,
+        hospitalName: true
       },
       orderBy: { seq: 'asc' } 
     });
@@ -149,7 +151,11 @@ export class DeviceService {
         key = "device_legacy:HID-DEVELOPMENT";
         break;
       default:
-        conditions = undefined;
+        conditions = {
+          NOT: [
+            { hospital: "0" },
+          ]
+        };
         key = "device_legacy";
     }
     return { conditions, key };

@@ -20,8 +20,8 @@ export class DeviceController {
   }
 
   @Get()
-  async findAll(@Query('ward') ward: string, @Query('page') page: string, @Query('perpage') perpage: string, @Request() req: { user: JwtPayloadDto }) {
-    return this.deviceService.findAll(ward, page, perpage, req.user);
+  async findAll(@Query('filter') filter: string, @Query('ward') ward: string, @Query('page') page: string, @Query('perpage') perpage: string, @Request() req: { user: JwtPayloadDto }) {
+    return this.deviceService.findAll(filter, ward, page, perpage, req.user);
   }
   
   @Get(':id')
