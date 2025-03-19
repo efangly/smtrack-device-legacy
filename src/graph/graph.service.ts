@@ -29,7 +29,7 @@ export class GraphService {
     query += '|> filter(fn: (r) => r._measurement == "templog") |> timeShift(duration: 7h, columns: ["_time"]) ';
     query += `|> filter(fn: (r) => r._field == "temp" and r.sn == "${sn}") |> yield(name: "temp")`;
     const result = await this.influxdb.queryData(query);
-    if (result.length > 0) await this.redis.set(`device_legacy_graph:${sn}${filter.split(',').join("")}`, JSON.stringify(result), 10);
+    if (result.length > 0) await this.redis.set(`device_legacy_graph:${sn}${filter.split(',').join("")}`, JSON.stringify(result), 1800);
     return result;
   }
 }
