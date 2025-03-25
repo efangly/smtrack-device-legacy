@@ -168,6 +168,10 @@ export class TemplogService {
         conditions = { isAlert: true, device: { hospital: user.hosId } };
         key = `templog:${user.hosId}`;
         break;
+      case "ADMIN":
+        conditions = { isAlert: true, device: { hospital: user.hosId } };
+        key = `templog:${user.hosId}`;
+        break;
       case "SERVICE":
         conditions = { isAlert: true, NOT: { device: { hospital: "HID-DEVELOPMENT" } } };
         key = "templog:HID-DEVELOPMENT";

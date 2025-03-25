@@ -146,6 +146,10 @@ export class DeviceService {
         conditions = { hospital: user.hosId  };
         key = `device_legacy:${user.hosId}`;
         break;
+      case "ADMIN":
+        conditions = { hospital: user.hosId  };
+        key = `device_legacy:${user.hosId}`;
+        break;
       case "SERVICE":
         conditions = { NOT: { hospital: "HID-DEVELOPMENT" } };
         key = "device_legacy:HID-DEVELOPMENT";
