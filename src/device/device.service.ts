@@ -95,7 +95,7 @@ export class DeviceService {
         minTemp: true,
         adjTemp: true,
         record: true,
-        log: { where: { isAlert: false }, orderBy: { createdAt: 'asc' } }
+        log: { where: { isAlert: false }, orderBy: { createdAt: 'desc' } }
       } 
     });
     if (result) await this.redis.set(`device_legacy:${id}`, JSON.stringify(result), 15);
