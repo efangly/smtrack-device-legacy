@@ -31,8 +31,12 @@ export class TemplogController {
 
   @Get('alert/notification')
   @UseGuards(JwtAuthGuard)
-  async findAll(@Request() req: { user: JwtPayloadDto }) {
-    return this.templogService.findAll(req.user);
+  async findAll(
+    @Query('page') page: string,
+    @Query('perpage') perpage: string,
+    @Request() req: { user: JwtPayloadDto }
+  ) {
+    return this.templogService.findAll(page, perpage, req.user);
   }
 
   @Get('dashboard/count')

@@ -83,11 +83,15 @@ export class TemplogService {
     return data;
   }
 
-  async findAll(user: JwtPayloadDto) {
+  async findAll(current: string, total: string, user: JwtPayloadDto) {
+    const page = parseInt(current) || 1;
+    const perpage = parseInt(total) || 10;
     const { conditions, key } = this.findCondition(user);
-    const cache = await this.redis.get(key);
+    const cache = await this.redis.get(`${key}${page}${perpage}`);
     if (cache) return JSON.parse(cache);
     const templogs = await this.prisma.tempLogs.findMany({
+      take: perpage,
+      skip: (page - 1) * perpage,
       select: {
         mcuId: true,
         message: true,
@@ -96,7 +100,7 @@ export class TemplogService {
       where: conditions,
       orderBy: { createdAt: 'desc' }
     });
-    if (templogs.length > 0) await this.redis.set(key, JSON.stringify(templogs), 30);
+    if (templogs.length > 0) await this.redis.set(`${key}${page}${perpage}`, JSON.stringify(templogs), 30);
     return templogs;
   }
 

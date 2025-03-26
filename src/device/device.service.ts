@@ -35,10 +35,6 @@ export class DeviceService {
 
   async findAll(filter: string, wardId: string, page: string, perpage: string, user: JwtPayloadDto) {
     const { conditions, key } = this.findCondition(user);
-    if (!filter) {
-      const cache = await this.redis.get(wardId ? `device_legacy:${wardId}${page || 0}${perpage || 10}` : `${key}${page || 0}${perpage || 10}`);
-      if (cache) return JSON.parse(cache);
-    }
     let search = {} as Prisma.DevicesWhereInput;
     if (filter) {
       search = {
@@ -49,6 +45,9 @@ export class DeviceService {
           { hospitalName: { contains: filter } }
         ]
       };
+    } else {
+      const cache = await this.redis.get(wardId ? `device_legacy:${wardId}${page || 0}${perpage || 10}` : `${key}${page || 0}${perpage || 10}`);
+      if (cache) return JSON.parse(cache);
     }
     const [devices, total] = await this.prisma.$transaction([
       this.prisma.devices.findMany({ 
