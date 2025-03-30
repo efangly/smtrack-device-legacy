@@ -11,6 +11,7 @@ import { InfluxdbModule } from './influxdb/influxdb.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { GraphModule } from './graph/graph.module';
 import { BackupModule } from './backup/backup.module';
+import { MobileModule } from './mobile/mobile.module';
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { BackupModule } from './backup/backup.module';
     InfluxdbModule,
     PrismaModule,
     GraphModule,
-    BackupModule
+    BackupModule,
+    MobileModule
   ],
   providers: [JwtStrategy, DeviceStrategy]
 })
