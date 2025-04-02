@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { MobileService } from './mobile.service';
 import { JwtAuthGuard } from '../common/guards';
 import { JwtPayloadDto } from '../common/dto';
@@ -9,8 +9,8 @@ export class MobileController {
   constructor(private readonly mobileService: MobileService) {}
 
   @Get()
-  async findAll(@Request() req: { user: JwtPayloadDto }) {
-    return this.mobileService.findNotification(req.user);
+  async findAll(@Query('device') device: string, @Request() req: { user: JwtPayloadDto }) {
+    return this.mobileService.findNotification(device, req.user);
   }
 
   @Get(':ward')

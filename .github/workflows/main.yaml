@@ -17,20 +17,20 @@ jobs:
       with:
         context: .
         push: true
-        tags: siamatic/tms-backend:1.0.3
+        tags: siamatic/tms-backend:1.0.3-a
     - name: Send success message to slack
       id: slack
       uses: slackapi/slack-github-action@v1.27.0
       with:
         payload: |
           {
-            "text": "GitHub Action build siamatic/tms-backend:1.0.3 result: ${{ job.status }} 🖕🏽🖕🏽🖕🏽🖕🏽🖕🏽",
+            "text": "GitHub Action build siamatic/tms-backend:1.0.3-a result: ${{ job.status }} 🖕🏽🖕🏽🖕🏽🖕🏽🖕🏽",
             "blocks": [
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "GitHub Action build siamatic/tms-backend:1.0.3 result: ${{ job.status }} 🖕🏽🖕🏽🖕🏽🖕🏽🖕🏽"
+                  "text": "GitHub Action build siamatic/tms-backend:1.0.3-a result: ${{ job.status }} 🖕🏽🖕🏽🖕🏽🖕🏽🖕🏽"
                 }
               }
             ]
