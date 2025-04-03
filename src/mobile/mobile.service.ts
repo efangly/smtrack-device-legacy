@@ -44,6 +44,7 @@ export class MobileService {
       select: {
         mcuId: true,
         message: true,
+        probe: true,
         createdAt: true
       },
       where: conditions,
