@@ -65,7 +65,7 @@ export class MobileService {
         name: true, 
         ward: true,
         hospital: true,
-        log: { take: 1, where: { isAlert: false }, orderBy: { createdAt: 'desc' } }
+        log: { where: { isAlert: true } },
       } 
     });
     if (result.length > 0) await this.redis.set(`legacy-ward:${ward}`, JSON.stringify(result), 10);
