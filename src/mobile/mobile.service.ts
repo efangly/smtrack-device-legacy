@@ -45,6 +45,7 @@ export class MobileService {
         mcuId: true,
         message: true,
         probe: true,
+        device: { select: { name: true, wardName: true, hospitalName: true } },
         createdAt: true
       },
       where: conditions,
