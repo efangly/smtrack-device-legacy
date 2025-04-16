@@ -124,13 +124,15 @@ export class DeviceService {
 
   async update(id: string, deviceDto: UpdateDeviceDto) {
     deviceDto.updatedAt = dateFormat(new Date());
+    const device = await this.prisma.devices.update({ where: { id }, data: deviceDto });
     await this.redis.del('device_legacy');
-    return this.prisma.devices.update({ where: { id }, data: deviceDto });
+    return device;
   }
 
   async remove(id: string) {
+    await this.prisma.devices.delete({ where: { sn: id } });
     await this.redis.del('device_legacy');
-    return this.prisma.devices.delete({ where: { sn: id } });
+    return 'Device deleted successfully';
   }
 
   private findCondition (user: JwtPayloadDto): { conditions: Prisma.DevicesWhereInput | undefined, key: string } {

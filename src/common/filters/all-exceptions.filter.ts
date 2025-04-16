@@ -20,7 +20,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = exception.getResponse().toString(); 
       }
     }
-    if (status !== 401) this.logger.error(`Http Status: ${status} Error Message: ${message}`);
+    if (status >= 500) this.logger.error(`Http Status: ${status} Error Message: ${message}`);
     response.status(status).json({
       message: message,
       success: false,
