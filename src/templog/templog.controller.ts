@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, HttpCode, HttpStatus, Query, UseGuards, Request, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, HttpCode, HttpStatus, Query, UseGuards, Request } from '@nestjs/common';
 import { TemplogService } from './templog.service';
 import { CreateTemplogDto } from './dto/create-templog.dto';
 import { UpdateTemplogDto } from './dto/update-templog.dto';
@@ -10,13 +10,11 @@ import { DevicePayloadDto, JwtPayloadDto } from '../common/dto';
 @Controller('templog')
 export class TemplogController {
   constructor(private readonly templogService: TemplogService) {}
-  private readonly logger = new Logger(TemplogController.name);
 
   @Post()
   @UseGuards(DeviceJwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createTemplogDto: CreateTemplogDto, @Request() req: { user: DevicePayloadDto }) {
-    this.logger.log(`Received templog data from device ${req.user.id}`);
     createTemplogDto.isAlert = false;
     return this.templogService.create(createTemplogDto, req.user);
   }

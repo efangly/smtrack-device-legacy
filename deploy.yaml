@@ -4,7 +4,7 @@ metadata:
   name: legacy
   namespace: smtrack
 spec:
-  replicas: 2
+  replicas: 4
   selector:
     matchLabels:
       app: legacy
@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: legacy
-        image: siamatic/tms-backend:1.1.0
+        image: siamatic/tms-backend:1.1.1
         ports:
         - containerPort: 8080
         readinessProbe:
