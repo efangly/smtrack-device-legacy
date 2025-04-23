@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { CreateTemplogDto } from './dto/create-templog.dto';
 import { UpdateTemplogDto } from './dto/update-templog.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,47 +21,51 @@ export class TemplogService {
     let internet = false;
     let door = false;
     let plugin = false;
-    switch (templogDto.status.substring(5)) {
-      case '000':
-        internet = false;
-        door = true;
-        plugin = true;
-        break;
-      case '001':
-        internet = false;
-        door = true;
-        plugin = false;
-        break;
-      case '010':
-        internet = false;
-        door = false;
-        plugin = true;
-        break;
-      case '011':
-        internet = false;
-        door = false;
-        plugin = false;
-        break;
-      case '100':
-        internet = true;
-        door = true;
-        plugin = true;
-        break;
-      case '101':
-        internet = true;
-        door = true;
-        plugin = false;
-        break;
-      case '110':
-        internet = true;
-        door = false;
-        plugin = true;
-        break;
-      case '111':
-        internet = true;
-        door = false;
-        plugin = false;
-        break;
+    try {
+      switch (templogDto.status.substring(5)) {
+        case '000':
+          internet = false;
+          door = true;
+          plugin = true;
+          break;
+        case '001':
+          internet = false;
+          door = true;
+          plugin = false;
+          break;
+        case '010':
+          internet = false;
+          door = false;
+          plugin = true;
+          break;
+        case '011':
+          internet = false;
+          door = false;
+          plugin = false;
+          break;
+        case '100':
+          internet = true;
+          door = true;
+          plugin = true;
+          break;
+        case '101':
+          internet = true;
+          door = true;
+          plugin = false;
+          break;
+        case '110':
+          internet = true;
+          door = false;
+          plugin = true;
+          break;
+        case '111':
+          internet = true;
+          door = false;
+          plugin = false;
+          break;
+      }
+    } catch (error) {
+      throw new BadRequestException('Invalid status format');
     }
     const data = {
       mcuId: user.id,
