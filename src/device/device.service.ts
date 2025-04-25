@@ -53,7 +53,7 @@ export class DeviceService {
       this.prisma.devices.findMany({ 
         skip: page ? (parseInt(page) - 1) * parseInt(perpage) : 0,
         take: perpage ? parseInt(perpage) : 10,
-        where: filter ? { AND: [wardId ? { ward: wardId } : conditions, search] } : wardId ? { ward: wardId } : conditions, 
+        where: filter ? { AND: [wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]}: conditions, search] } : wardId ? { ward: wardId } : conditions, 
         select: { 
           id: true,
           sn: true, 
