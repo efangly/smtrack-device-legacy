@@ -53,7 +53,7 @@ export class DeviceService {
       this.prisma.devices.findMany({ 
         skip: page ? (parseInt(page) - 1) * parseInt(perpage) : 0,
         take: perpage ? parseInt(perpage) : 10,
-        where: filter ? { AND: [wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]}: conditions, search] } : wardId ? { ward: wardId } : conditions, 
+        where: filter ? { AND: [wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]}: conditions, search] } : wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]} : conditions, 
         select: { 
           id: true,
           sn: true, 
@@ -71,7 +71,7 @@ export class DeviceService {
         },
         orderBy: { seq: 'asc' } 
       }),
-      this.prisma.devices.count({ where: filter ? { AND: [wardId ? { ward: wardId } : conditions, search] } : wardId ? { ward: wardId } : conditions })
+      this.prisma.devices.count({ where: filter ? { AND: [wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]} : conditions, search] } : wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]} : conditions })
     ]);
     if (devices.length > 0 && !filter) await this.redis.set(wardId ? `device_legacy:${wardId}${page || 0}${perpage || 10}` : `${key}${page || 0}${perpage || 10}`, JSON.stringify({ total, devices }), 10);
     return { total, devices };
