@@ -1,4 +1,4 @@
-import { Injectable, Inject, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateTemplogDto } from './dto/create-templog.dto';
 import { UpdateTemplogDto } from './dto/update-templog.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { RedisService } from '../redis/redis.service';
 import { ClientProxy } from '@nestjs/microservices';
 import { InfluxdbService } from '../influxdb/influxdb.service';
+import axios from 'axios';
 
 @Injectable()
 export class TemplogService {
@@ -17,7 +18,12 @@ export class TemplogService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService
   ) {}
-  async create(templogDto: CreateTemplogDto, user: DevicePayloadDto) {
+  async create(templogDto: CreateTemplogDto, device: DevicePayloadDto) {
+    const limit = await this.redis.canRequest(device.id);
+    if (limit > 10) {
+      if (limit === 11) await axios.post(String(process.env.SLACK_WEBHOOK), { text: `${device.id}: Too many requests` });
+      throw new HttpException('Rate limit exceeded', HttpStatus.TOO_MANY_REQUESTS);
+    }
     let internet = false;
     let door = false;
     let plugin = false;
@@ -68,7 +74,7 @@ export class TemplogService {
       throw new BadRequestException('Invalid status format');
     }
     const data = {
-      mcuId: user.id,
+      mcuId: device.id,
       internet: internet,
       door: door,
       plugin: plugin,

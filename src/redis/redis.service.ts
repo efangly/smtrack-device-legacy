@@ -34,6 +34,17 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async canRequest(deviceId: string): Promise<number> {
+    const now = new Date();
+    const minutes = now.getUTCMinutes();
+    const roundedMinutes = Math.floor(minutes / 5) * 5;
+    const timeKey = `${now.getUTCFullYear()}${now.getUTCMonth() + 1}${now.getUTCDate()}${now.getUTCHours()}${roundedMinutes}`;
+    const key = `ratelimit:${deviceId}:${timeKey}`;
+    const count = await this.client.incr(key);
+    if (count === 1) await this.client.expire(key, 300);
+    return count;
+  }
+
   async onModuleInit() {
     this.client = createClient({ 
       url: process.env.RADIS_HOST, 
