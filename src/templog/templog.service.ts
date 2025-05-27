@@ -21,8 +21,10 @@ export class TemplogService {
   async create(templogDto: CreateTemplogDto, device: DevicePayloadDto) {
     const limit = await this.redis.canRequest(device.id);
     if (limit > 10) {
-      if (limit === 11) await axios.post(String(process.env.SLACK_WEBHOOK), { text: `${device.id}: Too many requests` });
-      if (!device.id.startsWith('TMS')) throw new HttpException('Rate limit exceeded', HttpStatus.TOO_MANY_REQUESTS);
+      if (limit === 11 && !device.id.startsWith('TMS')) {
+        await axios.post(String(process.env.SLACK_WEBHOOK), { text: `${device.id}: Too many requests\n HospitalID: ${device.hosId}\n 🖕🏼🖕🏼🖕🏼` });
+        throw new HttpException('Rate limit exceeded', HttpStatus.TOO_MANY_REQUESTS);
+      }
     }
     let internet = false;
     let door = false;
