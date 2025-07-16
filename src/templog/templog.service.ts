@@ -1,4 +1,4 @@
-import { Injectable, Inject, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateTemplogDto } from './dto/create-templog.dto';
 import { UpdateTemplogDto } from './dto/update-templog.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -6,23 +6,31 @@ import { dateFormat } from '../common/utils';
 import { DevicePayloadDto, JwtPayloadDto } from '../common/dto';
 import { Prisma } from '@prisma/client';
 import { RedisService } from '../redis/redis.service';
-import { ClientProxy } from '@nestjs/microservices';
 import { InfluxdbService } from '../influxdb/influxdb.service';
 import axios from 'axios';
+import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class TemplogService {
   constructor(
-    @Inject('RABBITMQ_SERVICE') private readonly client: ClientProxy,
+    private readonly rabbitmq: RabbitmqService,
     private readonly influxdb: InfluxdbService,
     private readonly prisma: PrismaService,
     private readonly redis: RedisService
-  ) {}
+  ) { }
   async create(templogDto: CreateTemplogDto, device: DevicePayloadDto) {
     const limit = await this.redis.canRequest(device.id);
     if (limit > 10 && !device.id.startsWith('TMS')) {
-      if (limit === 11) await axios.post(String(process.env.SLACK_WEBHOOK), { text: `${device.id}: Too many requests\nHospitalID: ${device.hosId}` });
-      throw new HttpException('Rate limit exceeded', HttpStatus.TOO_MANY_REQUESTS);
+      if (limit === 11) {
+        this.rabbitmq.sendMonitor('create-event', {
+          deviceId: device.id,
+          probe: templogDto.probe,
+          event: 'Too many requests',
+          type: 'WARNING'
+        });
+        await axios.post(String(process.env.SLACK_WEBHOOK), { text: `${device.id}: Too many requests\nHospitalID: ${device.hosId}` });
+      }
+      throw new HttpException('Too many requests', HttpStatus.TOO_MANY_REQUESTS);
     }
     let internet = false;
     let door = false;
@@ -71,6 +79,12 @@ export class TemplogService {
           break;
       }
     } catch (error) {
+      this.rabbitmq.sendMonitor('create-event', {
+        deviceId: device.id,
+        probe: templogDto.probe,
+        event: 'Invalid status format, Received: ' + templogDto.status,
+        type: 'CRITICAL'
+      });
       throw new BadRequestException('Invalid status format');
     }
     const data = {
@@ -88,7 +102,7 @@ export class TemplogService {
       createdAt: dateFormat(new Date()),
       updatedAt: dateFormat(new Date())
     }
-    this.client.emit('templog', data);
+    this.rabbitmq.sendTemplog(data);
     await this.redis.del("templog");
     return data;
   }
@@ -131,7 +145,7 @@ export class TemplogService {
         break;
       case "LEGACY_USER":
         query += `|> filter(fn: (r) => r.ward == "${user.wardId}") `;
-        break; 
+        break;
     }
     query += '|> filter(fn: (r) => r._field == "message")';
     query += '|> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")';

@@ -12,6 +12,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { GraphModule } from './graph/graph.module';
 import { BackupModule } from './backup/backup.module';
 import { MobileModule } from './mobile/mobile.module';
+import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import { MobileModule } from './mobile/mobile.module';
     PrismaModule,
     GraphModule,
     BackupModule,
-    MobileModule
+    MobileModule,
+    RabbitmqModule
   ],
   providers: [JwtStrategy, DeviceStrategy]
 })

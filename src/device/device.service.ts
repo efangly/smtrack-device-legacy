@@ -7,30 +7,43 @@ import { JwtService } from '@nestjs/jwt';
 import { dateFormat } from '../common/utils';
 import { JwtPayloadDto } from '../common/dto';
 import { Prisma } from '@prisma/client';
+import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class DeviceService {
   constructor(
-    private readonly prisma: PrismaService, 
+    private readonly rabbitmq: RabbitmqService,
+    private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly jwtService: JwtService
-  ) {}
+  ) { }
   async create(deviceDto: CreateDeviceDto) {
     const device = await this.prisma.devices.findUnique({ where: { sn: deviceDto.sn } });
     if (device) throw new BadRequestException('Device already exists');
     const seq = await this.prisma.devices.findMany({ take: 1, orderBy: { createdAt: 'desc' } });
     deviceDto.seq = seq.length === 0 ? 1 : seq[0].seq + 1;
-    deviceDto.token = this.jwtService.sign({ 
-      sn: deviceDto.sn, 
-      ward: deviceDto.ward, 
-      hospital: deviceDto.hospital 
-    }, { 
-      secret: process.env.DEVICE_SECRET 
+    deviceDto.token = this.jwtService.sign({
+      sn: deviceDto.sn,
+      ward: deviceDto.ward,
+      hospital: deviceDto.hospital
+    }, {
+      secret: process.env.DEVICE_SECRET
     });
     deviceDto.createdAt = dateFormat(new Date());
     deviceDto.updatedAt = dateFormat(new Date());
+    const result = await this.prisma.devices.create({ data: deviceDto });
+    this.rabbitmq.sendMonitor('create-device', {
+      id: device.sn,
+      sn: device.sn,
+      ward: device.ward,
+      wardName: device.wardName,
+      hospital: device.hospital,
+      hospitalName: device.hospitalName,
+      seq: device.seq,
+      name: device.name
+    });
     await this.redis.del('device_legacy');
-    return this.prisma.devices.create({ data: deviceDto });
+    return result;
   }
 
   async findAll(filter: string, wardId: string, page: string, perpage: string, user: JwtPayloadDto) {
@@ -50,14 +63,14 @@ export class DeviceService {
       if (cache) return JSON.parse(cache);
     }
     const [devices, total] = await this.prisma.$transaction([
-      this.prisma.devices.findMany({ 
+      this.prisma.devices.findMany({
         skip: page ? (parseInt(page) - 1) * parseInt(perpage) : 0,
         take: perpage ? parseInt(perpage) : 10,
-        where: filter ? { AND: [wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]}: conditions, search] } : wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]} : conditions, 
-        select: { 
+        where: filter ? { AND: [wardId ? { OR: [{ ward: wardId }, { hospital: wardId }] } : conditions, search] } : wardId ? { OR: [{ ward: wardId }, { hospital: wardId }] } : conditions,
+        select: {
           id: true,
-          sn: true, 
-          name: true, 
+          sn: true,
+          name: true,
           ward: true,
           wardName: true,
           hospital: true,
@@ -69,9 +82,9 @@ export class DeviceService {
           token: true,
           log: { where: { isAlert: false }, take: 1, orderBy: { createdAt: 'desc' } }
         },
-        orderBy: { seq: 'asc' } 
+        orderBy: { seq: 'asc' }
       }),
-      this.prisma.devices.count({ where: filter ? { AND: [wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]} : conditions, search] } : wardId ? {OR: [{ ward: wardId }, {hospital: wardId}]} : conditions })
+      this.prisma.devices.count({ where: filter ? { AND: [wardId ? { OR: [{ ward: wardId }, { hospital: wardId }] } : conditions, search] } : wardId ? { OR: [{ ward: wardId }, { hospital: wardId }] } : conditions })
     ]);
     if (devices.length > 0 && !filter) await this.redis.set(wardId ? `device_legacy:${wardId}${page || 0}${perpage || 10}` : `${key}${page || 0}${perpage || 10}`, JSON.stringify({ total, devices }), 10);
     return { total, devices };
@@ -80,12 +93,12 @@ export class DeviceService {
   async findOne(id: string) {
     const cache = await this.redis.get(`device_legacy:${id}`);
     if (cache) return JSON.parse(cache);
-    const result = await this.prisma.devices.findUnique({ 
+    const result = await this.prisma.devices.findUnique({
       where: { sn: id },
-      select: { 
+      select: {
         id: true,
-        sn: true, 
-        name: true, 
+        sn: true,
+        name: true,
         ward: true,
         wardName: true,
         hospital: true,
@@ -95,7 +108,7 @@ export class DeviceService {
         adjTemp: true,
         record: true,
         log: { where: { isAlert: false }, orderBy: { createdAt: 'desc' } }
-      } 
+      }
     });
     if (result) await this.redis.set(`device_legacy:${id}`, JSON.stringify(result), 15);
     return result;
@@ -105,18 +118,19 @@ export class DeviceService {
     const { conditions, key } = this.findCondition(user);
     const cache = await this.redis.get(key);
     if (cache) return JSON.parse(cache);
-    const result = await this.prisma.devices.findMany({ 
+    const result = await this.prisma.devices.findMany({
       where: conditions,
-      select: { 
+      select: {
         id: true,
-        sn: true, 
-        name: true, 
+        sn: true,
+        seq: true,
+        name: true,
         ward: true,
         wardName: true,
         hospital: true,
         hospitalName: true
       },
-      orderBy: { seq: 'asc' } 
+      orderBy: { seq: 'asc' }
     });
     if (result.length > 0) await this.redis.set(key, JSON.stringify(result), 10);
     return result;
@@ -135,7 +149,7 @@ export class DeviceService {
     return 'Device deleted successfully';
   }
 
-  private findCondition (user: JwtPayloadDto): { conditions: Prisma.DevicesWhereInput | undefined, key: string } {
+  private findCondition(user: JwtPayloadDto): { conditions: Prisma.DevicesWhereInput | undefined, key: string } {
     let conditions: Prisma.DevicesWhereInput | undefined = undefined;
     let key = "";
     switch (user.role) {
@@ -144,11 +158,11 @@ export class DeviceService {
         key = `device_legacy:${user.wardId}`;
         break;
       case "LEGACY_ADMIN":
-        conditions = { hospital: user.hosId  };
+        conditions = { hospital: user.hosId };
         key = `device_legacy:${user.hosId}`;
         break;
       case "ADMIN":
-        conditions = { hospital: user.hosId  };
+        conditions = { hospital: user.hosId };
         key = `device_legacy:${user.hosId}`;
         break;
       case "SERVICE":
