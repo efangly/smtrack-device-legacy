@@ -24,7 +24,7 @@ export class TemplogService {
       if (limit === 11) {
         this.rabbitmq.sendMonitor('create-event', {
           deviceId: device.id,
-          probe: templogDto.probe,
+          probe: templogDto.mcuId,
           event: 'Too many requests',
           type: 'WARNING'
         });
@@ -81,7 +81,7 @@ export class TemplogService {
     } catch (error) {
       this.rabbitmq.sendMonitor('create-event', {
         deviceId: device.id,
-        probe: templogDto.probe,
+        probe: templogDto.mcuId,
         event: 'Invalid status format, Received: ' + templogDto.status,
         type: 'CRITICAL'
       });
