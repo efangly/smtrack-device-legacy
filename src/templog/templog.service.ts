@@ -18,7 +18,7 @@ export class TemplogService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService
   ) { }
-  async create(templogDto: CreateTemplogDto, device: DevicePayloadDto) {
+  async create(templogDto: CreateTemplogDto, device: DevicePayloadDto, ip: string) {
     const limit = await this.redis.canRequest(device.id);
     if (limit > 10 && !device.id.startsWith('TMS')) {
       if (limit === 11) {
@@ -103,6 +103,26 @@ export class TemplogService {
       updatedAt: dateFormat(new Date())
     }
     this.rabbitmq.sendTemplog(data);
+    if (templogDto.isAlert) {
+      this.rabbitmq.sendMonitor('update-device', {
+        id: device.id,
+        update: {
+          lastInsert: dateFormat(new Date()),
+          lastTemp: templogDto.tempValue,
+          lastNotification: dateFormat(new Date()),
+          ip: ip,
+        }
+      });
+    } else {
+      this.rabbitmq.sendMonitor('update-device', {
+        id: device.id,
+        update: {
+          lastInsert: dateFormat(new Date()),
+          lastTemp: templogDto.tempValue,
+          ip: ip,
+        }
+      });
+    }
     await this.redis.del("templog");
     return data;
   }

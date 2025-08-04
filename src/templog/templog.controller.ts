@@ -14,17 +14,27 @@ export class TemplogController {
   @Post()
   @UseGuards(DeviceJwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createTemplogDto: CreateTemplogDto, @Request() req: { user: DevicePayloadDto }) {
+  async create(@Body() createTemplogDto: CreateTemplogDto, @Request() req: {
+    socket: any;
+    headers: any; user: DevicePayloadDto 
+}) {
     createTemplogDto.isAlert = false;
-    return this.templogService.create(createTemplogDto, req.user);
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = typeof forwarded === 'string' ? forwarded.split(',')[0] : req.socket.remoteAddress;
+    return this.templogService.create(createTemplogDto, req.user, ip);
   }
 
   @Post('alert/notification')
   @UseGuards(DeviceJwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createWithAlert(@Body() createTemplogDto: CreateTemplogDto, @Request() req: { user: DevicePayloadDto }) {
+  async createWithAlert(@Body() createTemplogDto: CreateTemplogDto, @Request() req: {
+    socket: any;
+    headers: any; user: DevicePayloadDto 
+}) {
     createTemplogDto.isAlert = true;
-    return this.templogService.create(createTemplogDto, req.user);
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = typeof forwarded === 'string' ? forwarded.split(',')[0] : req.socket.remoteAddress;
+    return this.templogService.create(createTemplogDto, req.user, ip);
   }
 
   @Get('alert/notification')
