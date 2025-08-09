@@ -29,6 +29,7 @@ export class DeviceService {
     }, {
       secret: process.env.DEVICE_SECRET
     });
+    deviceDto.serial = deviceDto.sn;
     deviceDto.createdAt = dateFormat(new Date());
     deviceDto.updatedAt = dateFormat(new Date());
     const result = await this.prisma.devices.create({ data: deviceDto });

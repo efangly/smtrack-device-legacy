@@ -60,6 +60,11 @@ export class CreateDeviceDto {
   @IsString()
   @MaxLength(200)
   token: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  serial: string;
   
   @IsDate()
   @IsOptional()
