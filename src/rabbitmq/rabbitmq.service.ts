@@ -6,6 +6,7 @@ export class RabbitmqService {
   constructor(
     @Inject('RABBITMQ_SERVICE') private readonly client: ClientProxy,
     @Inject('MONITOR_SERVICE') private readonly monitorClient: ClientProxy,
+    @Inject('BACKUP_SERVICE') private readonly backupClient: ClientProxy,
   ) {}
 
   sendTemplog<T>(data: T) {
@@ -14,5 +15,9 @@ export class RabbitmqService {
 
   sendMonitor<T>(pattern: string, data: T) {
     this.monitorClient.emit(pattern, data);
+  }
+
+  sendBackup<T>(pattern: string, data: T) {
+    this.backupClient.emit(pattern, data);
   }
 }

@@ -30,18 +30,19 @@ export class DeviceService {
       secret: process.env.DEVICE_SECRET
     });
     deviceDto.serial = deviceDto.sn;
-    deviceDto.createdAt = dateFormat(new Date());
-    deviceDto.updatedAt = dateFormat(new Date());
+    const now = dateFormat(new Date());
+    deviceDto.createdAt = now;
+    deviceDto.updatedAt = now;
     const result = await this.prisma.devices.create({ data: deviceDto });
     this.rabbitmq.sendMonitor('create-device', {
-      id: device.sn,
-      sn: device.sn,
-      ward: device.ward,
-      wardName: device.wardName,
-      hospital: device.hospital,
-      hospitalName: device.hospitalName,
-      seq: device.seq,
-      name: device.name
+      id: result.sn,
+      sn: result.sn,
+      ward: result.ward,
+      wardName: result.wardName,
+      hospital: result.hospital,
+      hospitalName: result.hospitalName,
+      seq: result.seq,
+      name: result.name
     });
     await this.redis.del('device_legacy');
     return result;
@@ -63,10 +64,12 @@ export class DeviceService {
       const cache = await this.redis.get(wardId ? `device_legacy:${wardId}${page || 0}${perpage || 10}` : `${key}${page || 0}${perpage || 10}`);
       if (cache) return JSON.parse(cache);
     }
+    const pageNum = Number.isNaN(parseInt(page)) || !page ? 1 : parseInt(page);
+    const perPageNum = Number.isNaN(parseInt(perpage)) || !perpage ? 10 : parseInt(perpage);
     const [devices, total] = await this.prisma.$transaction([
       this.prisma.devices.findMany({
-        skip: page ? (parseInt(page) - 1) * parseInt(perpage) : 0,
-        take: perpage ? parseInt(perpage) : 10,
+        skip: (pageNum - 1) * perPageNum,
+        take: perPageNum,
         where: filter ? { AND: [wardId ? { OR: [{ ward: wardId }, { hospital: wardId }] } : conditions, search] } : wardId ? { OR: [{ ward: wardId }, { hospital: wardId }] } : conditions,
         select: {
           id: true,
@@ -137,9 +140,9 @@ export class DeviceService {
     return result;
   }
 
-  async update(id: string, deviceDto: UpdateDeviceDto) {
+  async update(sn: string, deviceDto: UpdateDeviceDto) {
     deviceDto.updatedAt = dateFormat(new Date());
-    const device = await this.prisma.devices.update({ where: { id }, data: deviceDto });
+    const device = await this.prisma.devices.update({ where: { sn }, data: deviceDto });
     await this.redis.del('device_legacy');
     return device;
   }

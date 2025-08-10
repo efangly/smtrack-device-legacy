@@ -13,15 +13,22 @@ import { RabbitmqService } from './rabbitmq.service';
           queue: 'templog_queue',
           queueOptions: { durable: true }
         }
-      }
-    ]),
-    ClientsModule.register([
+      },
       {
         name: 'MONITOR_SERVICE',
         transport: Transport.RMQ,
         options: {
           urls: [process.env.RABBITMQ || 'amqp://admin:thanesmail1234@siamatic.co.th:5672'],
           queue: 'monitor_queue',
+          queueOptions: { durable: true }
+        }
+      },
+      {
+        name: 'BACKUP_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ || 'amqp://admin:thanesmail1234@siamatic.co.th:5672'],
+          queue: 'backup_queue',
           queueOptions: { durable: true }
         }
       }
