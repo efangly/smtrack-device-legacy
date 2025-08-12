@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { GraphService } from './graph.service';
 import { JwtAuthGuard } from '../common/guards';
 
@@ -10,5 +10,10 @@ export class GraphController {
   @Get()
   async findAll(@Query('sn') sn: string, @Query('filter') filter: string) {
     return this.graphService.findAll(sn, filter);
+  }
+
+  @Get(':date')
+  async getMetrics(@Param('date') date: string) {
+    return this.graphService.dailyResult(date);
   }
 }
