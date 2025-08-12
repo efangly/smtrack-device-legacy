@@ -12,10 +12,10 @@ export class BackupService {
     let logCount = 0;
     let notificationCount = 0;
     const backup = await this.prisma.tempLogs.findMany({
+      select: { isAlert: true },
       where: {
         createdAt: { lt: toDate(format(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()), "yyyy-MM-dd'T'HH:mm:ss'Z'")) }
-      },
-      orderBy: { createdAt: 'asc' }
+      }
     });
     if (backup.length === 0) {
       this.logger.log('No backup data found');

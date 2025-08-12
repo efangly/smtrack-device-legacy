@@ -38,10 +38,10 @@ spec:
         resources:
           requests:
             memory: 512Mi
-            cpu: 100m
+            cpu: 200m
           limits:
             memory: 512Mi
-            cpu: 100m
+            cpu: 300m
         env:
         - name: DATABASE_URL
           valueFrom:
