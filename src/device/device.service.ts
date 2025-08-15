@@ -83,6 +83,7 @@ export class DeviceService {
           minTemp: true,
           adjTemp: true,
           record: true,
+          serial: true,
           token: true,
           log: { where: { isAlert: false }, take: 1, orderBy: { createdAt: 'desc' } }
         },
@@ -111,6 +112,7 @@ export class DeviceService {
         minTemp: true,
         adjTemp: true,
         record: true,
+        serial: true,
         log: { where: { isAlert: false }, orderBy: { createdAt: 'desc' } }
       }
     });
