@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -116,7 +116,8 @@ export class DeviceService {
         log: { where: { isAlert: false }, orderBy: { createdAt: 'desc' } }
       }
     });
-    if (result) await this.redis.set(`device_legacy:${id}`, JSON.stringify(result), 15);
+    if (!result) throw new NotFoundException('Device not found');
+    await this.redis.set(`device_legacy:${id}`, JSON.stringify(result), 15);
     return result;
   }
 

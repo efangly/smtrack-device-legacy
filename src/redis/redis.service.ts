@@ -1,11 +1,12 @@
-import { Injectable, OnModuleDestroy, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { createClient } from 'redis';
 import type { RedisClientType } from 'redis';
+import { JsonLogger } from '../common/logger';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   private client: RedisClientType;
-  private readonly logger = new Logger(RedisService.name);
+  private readonly logger = new JsonLogger();
   async set(key: string, value: string, expire: number): Promise<void> {
     try {
       await this.client.setEx(key, expire, value);
@@ -68,7 +69,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`Redis error: ${error}`);
     });
     this.client.on('reconnecting', () => {
-      this.logger.log('Redis reconnecting..');
+      // Regular log removed - only warn/error logs are output
     });
   }
 
