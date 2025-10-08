@@ -18,19 +18,13 @@ export class TemplogService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService
   ) { }
-  async create(templogDto: CreateTemplogDto, device: DevicePayloadDto, ip: string) {
+  async create(templogDto: CreateTemplogDto, device: DevicePayloadDto) {
     const limit = await this.redis.canRequest(device.id);
     if (limit > 10 && !device.id.startsWith('TMS')) {
       if (limit === 11) {
-        this.rabbitmq.sendMonitor('create-event', {
-          deviceId: device.id,
-          probe: templogDto.mcuId,
-          event: 'Too many requests',
-          type: 'WARNING'
-        });
         await axios.post(String(process.env.SLACK_WEBHOOK), { text: `${device.id}: Too many requests\nHospitalID: ${device.hosId}` });
       }
-      throw new HttpException('Too many requests', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(`${device.id}: Too many requests`, HttpStatus.TOO_MANY_REQUESTS);
     }
     let internet = false;
     let door = false;
@@ -79,13 +73,7 @@ export class TemplogService {
           break;
       }
     } catch (error) {
-      this.rabbitmq.sendMonitor('create-event', {
-        deviceId: device.id,
-        probe: templogDto.mcuId,
-        event: 'Invalid status format, Received: ' + templogDto.status,
-        type: 'CRITICAL'
-      });
-      throw new BadRequestException('Invalid status format');
+      throw new BadRequestException(`${device.id} Invalid status format`);
     }
     const data = {
       mcuId: device.id,
@@ -103,26 +91,6 @@ export class TemplogService {
       updatedAt: dateFormat(new Date())
     }
     this.rabbitmq.sendTemplog(data);
-    if (templogDto.isAlert) {
-      this.rabbitmq.sendMonitor('update-device', {
-        id: device.id,
-        update: {
-          lastInsert: dateFormat(new Date()),
-          lastTemp: templogDto.tempValue,
-          lastNotification: dateFormat(new Date()),
-          ip: ip,
-        }
-      });
-    } else {
-      this.rabbitmq.sendMonitor('update-device', {
-        id: device.id,
-        update: {
-          lastInsert: dateFormat(new Date()),
-          lastTemp: templogDto.tempValue,
-          ip: ip,
-        }
-      });
-    }
     await this.redis.del("templog");
     return data;
   }

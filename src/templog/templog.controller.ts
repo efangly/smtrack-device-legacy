@@ -9,32 +9,22 @@ import { DevicePayloadDto, JwtPayloadDto } from '../common/dto';
 
 @Controller('templog')
 export class TemplogController {
-  constructor(private readonly templogService: TemplogService) {}
+  constructor(private readonly templogService: TemplogService) { }
 
   @Post()
   @UseGuards(DeviceJwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createTemplogDto: CreateTemplogDto, @Request() req: {
-    socket: any;
-    headers: any; user: DevicePayloadDto 
-}) {
+  async create(@Body() createTemplogDto: CreateTemplogDto, @Request() req: { user: DevicePayloadDto }) {
     createTemplogDto.isAlert = false;
-    const forwarded = req.headers['x-forwarded-for'];
-    const ip = typeof forwarded === 'string' ? forwarded.split(',')[0] : req.socket.remoteAddress;
-    return this.templogService.create(createTemplogDto, req.user, ip);
+    return this.templogService.create(createTemplogDto, req.user);
   }
 
   @Post('alert/notification')
   @UseGuards(DeviceJwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async createWithAlert(@Body() createTemplogDto: CreateTemplogDto, @Request() req: {
-    socket: any;
-    headers: any; user: DevicePayloadDto 
-}) {
+  async createWithAlert(@Body() createTemplogDto: CreateTemplogDto, @Request() req: { user: DevicePayloadDto }) {
     createTemplogDto.isAlert = true;
-    const forwarded = req.headers['x-forwarded-for'];
-    const ip = typeof forwarded === 'string' ? forwarded.split(',')[0] : req.socket.remoteAddress;
-    return this.templogService.create(createTemplogDto, req.user, ip);
+    return this.templogService.create(createTemplogDto, req.user);
   }
 
   @Get('alert/notification')

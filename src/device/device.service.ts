@@ -7,12 +7,10 @@ import { JwtService } from '@nestjs/jwt';
 import { dateFormat } from '../common/utils';
 import { JwtPayloadDto } from '../common/dto';
 import { Prisma } from '@prisma/client';
-import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class DeviceService {
   constructor(
-    private readonly rabbitmq: RabbitmqService,
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly jwtService: JwtService
@@ -34,16 +32,6 @@ export class DeviceService {
     deviceDto.createdAt = now;
     deviceDto.updatedAt = now;
     const result = await this.prisma.devices.create({ data: deviceDto });
-    this.rabbitmq.sendMonitor('create-device', {
-      id: result.sn,
-      sn: result.sn,
-      ward: result.ward,
-      wardName: result.wardName,
-      hospital: result.hospital,
-      hospitalName: result.hospitalName,
-      seq: result.seq,
-      name: result.name
-    });
     await this.redis.del('device_legacy');
     return result;
   }
