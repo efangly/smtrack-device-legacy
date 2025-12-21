@@ -76,7 +76,7 @@ export class TemplogService {
       throw new BadRequestException(`${device.id} Invalid status format`);
     }
     const data = {
-      mcuId: device.id,
+      mcuId: device.id.trim(),
       internet: internet,
       door: door,
       plugin: plugin,
@@ -86,7 +86,7 @@ export class TemplogService {
       time: templogDto.time,
       isAlert: templogDto.isAlert,
       message: templogDto.message,
-      probe: templogDto.mcuId,
+      probe: templogDto.mcuId.trim(),
       createdAt: dateFormat(new Date()),
       updatedAt: dateFormat(new Date())
     }
