@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { IsString, IsBoolean, MaxLength, IsOptional, IsDate, IsNumber, IsNotEmpty } from 'class-validator';
 
 export class CreateTemplogDto {
@@ -9,6 +10,7 @@ export class CreateTemplogDto {
   @IsNotEmpty()
   @IsString()
   @MaxLength(100)
+  @Transform(({ value }) => value?.trim())
   mcuId: string;
 
   @IsOptional()
@@ -46,6 +48,7 @@ export class CreateTemplogDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
+  @Transform(({ value }) => value?.trim())
   probe: string;
 
   @IsDate()
