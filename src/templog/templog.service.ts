@@ -107,7 +107,8 @@ export class TemplogService {
       select: {
         mcuId: true,
         message: true,
-        createdAt: true
+        createdAt: true,
+        device: { select: { serial: true }}
       },
       where: conditions,
       orderBy: { createdAt: 'desc' }
