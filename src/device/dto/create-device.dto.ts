@@ -1,4 +1,4 @@
-import { IsString, MaxLength, IsOptional, IsDate, IsNumber, IsNotEmpty } from 'class-validator';
+import { IsString, MaxLength, IsOptional, IsDate, IsNumber, IsNotEmpty, IsBoolean } from 'class-validator';
 
 export class CreateDeviceDto {
   @IsOptional()
@@ -65,6 +65,10 @@ export class CreateDeviceDto {
   @IsString()
   @MaxLength(200)
   serial: string;
+
+  @IsOptional()
+  @IsBoolean()
+  online?: boolean;
   
   @IsDate()
   @IsOptional()

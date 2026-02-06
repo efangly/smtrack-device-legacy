@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { dateFormat } from '../common/utils';
 import { JwtPayloadDto } from '../common/dto';
 import { Prisma } from '@prisma/client';
+import { OnlineDto } from './dto/online.dto';
 
 @Injectable()
 export class DeviceService {
@@ -136,6 +137,16 @@ export class DeviceService {
     const device = await this.prisma.devices.update({ where: { sn }, data: deviceDto });
     await this.redis.del('device_legacy');
     return device;
+  }
+
+  async handleOnlineStatus(payload: OnlineDto) {
+    const now = dateFormat(new Date());
+    console.log(`Device SN: ${payload.id} is now ${payload.status} at ${now}`);
+    const data: UpdateDeviceDto = {
+      online: payload.status === 'client.connected' ? true : false,
+      updatedAt: now
+    }
+    await this.update(payload.id, data);
   }
 
   async remove(id: string) {
