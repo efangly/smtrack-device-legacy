@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: legacy
-        image: siamatic/tms-backend:1.2.0-a
+        image: siamatic/tms-backend:1.2.1
         ports:
         - containerPort: 8080
         readinessProbe:
